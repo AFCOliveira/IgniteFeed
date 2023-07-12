@@ -1,37 +1,69 @@
+/* eslint-disable no-unused-vars */
+/* eslint-disable react/jsx-key */
+import { format, formatDistanceToNow } from "date-fns";
+import { ptBR } from "date-fns/locale";
+import { useState } from "react";
 import { Avatar } from "./Avatar";
 import { Comment } from "./Comment";
 import styles from "./Post.module.css";
 
-export function Post() {
+export function Post({ author, publishedAt, content }) {
+  const [comments, setComments] = useState(["Parabéns, continue assim!!"]);
+  const publishedDateFormatted = format(
+    publishedAt,
+    "d 'de' LLLL 'às' HH:mm'h'",
+    {
+      locale: ptBR,
+    }
+  );
+  const publishedDateRelativeToNow = formatDistanceToNow(publishedAt, {
+    locale: ptBR,
+    addSuffix: true,
+  });
+  const [newCommentText, setNewCommentText] = useState("");
+
+  function handleCreateNewComment() {
+    event.preventDefault();
+    setComments([...comments, newCommentText]);
+    setNewCommentText("");
+  }
+
+  function handleNewCommentChange() {
+    setNewCommentText(event.target.value);
+  }
+
   return (
     <article className={styles.post}>
       <header>
         <div className={styles.author}>
-          <Avatar src="https://github.com/AFCOliveira.png" />
+          <Avatar src={author.avatarUrl} />
           <div className={styles.authorInfo}>
-            <strong>André Oliveira</strong>
-            <span>Web Developer</span>
+            <strong>{author.name}</strong>
+            <span>{author.role}</span>
           </div>
         </div>
         <time
-          title="11 de julho de 2023 às 09:08h"
-          dateTime="2023-07-11 09:08:30"
+          title={publishedDateFormatted}
+          dateTime={publishedAt.toISOString()}
         >
-          Publicado há 1h
+          {publishedDateRelativeToNow}
         </time>
       </header>
 
       <div className={styles.content}>
-        <p>Fala galeraa 👋 </p>
-        <p>
-          Acabei de subir mais um projeto no meu GitHub. É um projeto que fiz
-          com ReactJS, atraves do curso da Rocketseat. O nome do projeto é
-          PageIgnite 🚀{" "}
-        </p>
-        <p>
-          👉{"  "}{" "}
-          <a href="https://github.com/AFCOliveira">github.com/AFCOliveira </a>
-        </p>
+        {content.map((line) => {
+          if (line.type === "paragraph") {
+            return <p>{line.content}</p>;
+          } else if (line.type === "link") {
+            return (
+              <p>
+                <a href="https://github.com/AFCOliveira/IgniteFeed">
+                  {line.content}
+                </a>
+              </p>
+            );
+          }
+        })}
         <p>
           <a href="">#novoprojeto </a>
           {"  "}
@@ -41,18 +73,23 @@ export function Post() {
         </p>
       </div>
 
-      <form className={styles.commentForm}>
+      <form onSubmit={handleCreateNewComment} className={styles.commentForm}>
         <strong>Deixe seu feedback</strong>
-        <textarea placeholder="Deixe um comentário" />
+        <textarea
+          onChange={handleNewCommentChange}
+          placeholder="Deixe um comentário"
+          name="comment"
+          value={newCommentText}
+        />
         <footer>
           <button type="submit">Publicar</button>
         </footer>
       </form>
 
       <div className={styles.commentList}>
-        <Comment />
-        <Comment />
-        <Comment />
+        {comments.map((comment) => {
+          return <Comment content={comment} />;
+        })}
       </div>
     </article>
   );
